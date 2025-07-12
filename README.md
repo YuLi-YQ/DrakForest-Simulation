@@ -76,7 +76,6 @@ src/
 test/                                      # Unit tests
 .gitignore                                 # Version control ignore
 README.md                                  # Project documentation
-build.gradle                               # Build configuration
 ```
 
 ## Configuration Parameters
