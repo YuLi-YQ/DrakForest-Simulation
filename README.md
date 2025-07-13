@@ -1,228 +1,226 @@
-# ThreeBody Universe Simulation
+# ThreeBody Universe Simulation (Version 3.0)
 
-A cosmic civilization simulation based on the Dark Forest theory from Liu Cixin's "Three-Body Problem" trilogy. This Java implementation models the evolution of civilizations in a virtual universe, where survival depends on strategic development, resource management, and preemptive strikes against potential threats.
+🌌 A cosmic civilization simulation based on the Dark Forest theory from Liu Cixin's "Three-Body Problem" trilogy
 
-## Project Overview
+## 🚀 Major Updates in v3.0
 
-This simulation implements the core concepts from the Three-Body trilogy:
-- 🌌 **Civilization Development**: Tech advancement, population growth, resource management
-- 🌑 **Dark Forest Mechanics**: Tech exposure risks, long-range strikes, mutual destruction
-- 🔭 **Cosmic Sociology**: Survival as the primary need, resource competition, chain of suspicion
+### 1. Realistic Attack Mechanics
+   • Light-speed delayed strikes (travel time = distance / LIGHT_SPEED)
 
-Civilizations evolve through technological development, risk exposure to advanced neighbors, and strategic attacks, with only the most strategically advanced surviving. The simulation runs for configurable time steps, with comprehensive logging of all significant events.
+   • Position tolerance checks (POSITION_TOLERANCE)
 
-## Features
+   • Attack command queue with priority scheduling
 
-### Core Simulation Mechanics
-- **Civilization State Management**: Hidden, Exposed, and Destroyed states
-- **Technology Development**: Regular advancement with chance for "tech explosions"
-- **Resource System**: Allocation, consumption, and depletion mechanics
-- **Attack System**: Distance-based strike probability calculations
-- **Dynamic Exposure**: Adaptive exposure probability based on surviving civilizations
+### 2. Civilization Mobility
+   • Random movement with MOVE_PROBABILITY
 
-### Performance Optimizations
-- 🚀 **3D Spatial Indexing**: Grid-based system for efficient neighbor detection
-- ⚡ **Square Distance Calculations**: Optimized collision detection
-- 📊 **Compact Logging**: Human-readable output with essential information
-- 🧪 **Parameterized Configuration**: Easy adjustment of simulation parameters
+   • Maximum displacement (MAX_MOVE_DISTANCE)
 
-### Architecture
-- **Mediator Pattern**: Centralized civilization interaction management
-- **State Pattern**: Clean implementation of civilization states
-- **Factory Pattern**: Civilization creation and initialization
-- **Service Locator**: Centralized random and logging services
+   • Spatial index updates during movement
 
-## Getting Started
+### 3. Enhanced State System
+   • New SealedState (unused in current logic)
 
-### Prerequisites
-- Java 17 or higher
-- Maven or Gradle (optional)
+   • State-driven behavior via CivilizationState interface
 
-### Installation & Running
-```bash
-# Clone the repository
-git clone https://github.com/<your-username>/ThreeBody-Simulation.git
-cd ThreeBody-Simulation
+   • Destroyed civilizations stop development
 
-# Direct execution:
-java -cp target/classes com.rainy.ThreeBody.Test
+### 4. Optimized Resource Allocation
+   • Logarithmic weight distribution
+
+   • Dynamic allocation ratio based on surviving civilizations
+
+   • Resource consumption tied to population
+
+### 5. Performance Improvements
+   • Parallel stream processing for development
+
+   • Optimized 3D spatial indexing (GRID_SIZE auto-calculation)
+
+   • Thread-safe random number generation
+
+## ⚙️ New Configuration Parameters
+| Parameter | Default Value | Description |
+|-----------|---------------|-------------|
+| 'LIGHT_SPEED' | 30,000 Speed of | attack propagation (units/step) |
+| 'MOVE_PROBABILITY' | 0.05 | Chance for civilization to move each step |
+| 'MAX_MOVE_DISTANCE' | 5,000 | Maximum displacement per move |
+| 'POSITION_TOLERANCE' | 50 | Allowed target position deviation |
+| 'MIN_ATTACK_RESOURCES' | 100,000 | Minimum resources to launch attack |
+| 'ATTACK_RESOURCE_COST' | 50,000 | Resource cost per attack |
+| 'COUNTER_ATTACK_PROB' | 0.2 | Probability of counter-attacks |
+
+## 🧠 Key Algorithms
+
+### 1. Light-Speed Attack System
+```java
+// AttackCommand.java
+public AttackCommand(int hunterId, int targetId, int currentStep, 
+                     Point targetLocation, int travelTime, ...) {
+    this.arrivalStep = currentStep + travelTime; // Light-speed delay
+}
+
+// AttackOrder.java
+if (currentDistance <= POSITION_TOLERANCE) {
+    // Calculate hit probability
+    double successProbability = techAdvantage * distanceFactor;
+    if (success) target.destroy();
+}
 ```
 
-## Project Structure
+### 2. Civilization Movement
+```java
+// UniverseSimulation.java
+if (RandomService.nextDouble() < MOVE_PROBABILITY) {
+    int dx = random.nextInt(MAX_MOVE_DISTANCE*2) - MAX_MOVE_DISTANCE;
+    civ.setLocation(new Point(x+dx, y+dy, z+dz));
+}
+```
+
+### 3. Spatial Indexing Optimizations
+```java
+// SpatialIndex.java
+private static final int GRID_SIZE = Math.max(5_000, 
+    Math.min(50_000, 
+        UNIVERSE_SIZE / (int)Math.cbrt(CIVILIZATION_COUNT)
+    )
+);
+
+public List<Civilization> getNearby(Point center, double range) {
+    // Grid-based neighbor detection
+    int gridRange = (int) Math.ceil(range / GRID_SIZE);
+    // ... 3D grid traversal ...
+}
+```
+
+### 4. Thread-Safe Randomness
+```java
+// RandomService.java
+private static final ThreadLocal<Random> localRandom = 
+    ThreadLocal.withInitial(() -> new Random(System.nanoTime()));
+```
+
+## 📊 Simulation Workflow
+
+### 1. Initialization
+
+• Generate civilizations with unique positions
+
+• Allocate initial resources (BASE_RESOURCE_RATIO)
+
+### 2. Per Time Step
+
+• Random civilization exposure
+
+• Parallel development execution
+
+• Resource allocation
+
+• Movement processing
+
+• Light-speed attack resolution
+
+### 3. Attack Lifecycle
+
+```graph LR
+  A[Launch Attack] --> B{In-flight?}
+  B -->|Yes| C[Add to Queue]
+  B -->|No| D[Immediate Resolution]
+  C --> E{Arrival Step?}
+  E -->|Reached| F[Check Position Tolerance]
+  F -->|Valid| G[Resolve Attack]
+  F -->|Moved| H[Attack Missed]
+```
+
+## 🏗️ Project Structure
 
 ```
 src/
 ├── main/
-│   ├── java/
-│   │   ├── com/rainy/ThreeBody/
-│   │   │   ├── Civilization.java          # Core civilization model
-│   │   │   ├── CivilizationFactory.java   # Civilization creation
-│   │   │   ├── CivilizationState.java     # State interface
-│   │   │   ├── DestroyedState.java        # Destroyed state
-│   │   │   ├── ExposedState.java          # Exposed state
-│   │   │   ├── HiddenState.java           # Hidden state
-│   │   │   ├── LoggerService.java         # Logging service
-│   │   │   ├── RandomGenerator.java       # Random utilities
-│   │   │   ├── RandomService.java         # Central random service
-│   │   │   ├── ResourceAllocator.java     # Resource distribution
-│   │   │   ├── SimulationConfig.java      # Simulation parameters
-│   │   │   ├── SpatialIndex.java          # 3D spatial index
-│   │   │   ├── UniverseMediator.java      # Civilization interaction
-│   │   │   ├── UniverseSimulation.java    # Main controller
-│   │   │   └── CompactFormatter.java      # Log formatting
-│   │   └── com/rainy/tool/
-│   │       └── Point.java                 # 3D point implementation
-│   └── resources/                         # Configuration files
-test/                                      # Unit tests
-.gitignore                                 # Version control ignore
-README.md                                  # Project documentation
+│   ├── java/com/rainy/ThreeBody/
+│   │   ├── AttackCommand.java       # Light-speed attack container
+│   │   ├── AttackOrder.java         # Attack resolution system
+│   │   ├── SealedState.java         # New civilization state
+│   │   ├── UniverseMediator.java    # Enhanced event handling
+│   │   ├── Civilization.java        # Core civilization model
+│   │   ├── CivilizationState.java    # State interface
+│   │   ├── DestroyedState.java      # Destroyed state
+│   │   ├── ExposedState.java        # Exposed state
+│   │   ├── HiddenState.java         # Hidden state
+│   │   ├── LogService.java          # Logging service
+│   │   ├── RandomGenerator.java     # Random utilities
+│   │   ├── RandomService.java       # Central random service
+│   │   ├── ResourceAllocator.java   # Resource distribution
+│   │   ├── SimulationConfig.java    # Simulation parameters
+│   │   ├── SpatialIndex.java        # 3D spatial index
+│   │   ├── UniverseSimulation.java  # Main controller
+│   │   └── CompactFormatter.java    # Log formatting
+│   └── resources/                         
+test/                                
+.gitignore                           
+README.md                             
+LICENSE
 ```
 
-## Configuration Parameters
+## 🚦 Getting Started
 
-Key parameters in `SimulationConfig.java`:
+Prerequisites
 
-| Parameter | Default Value | Description |
-|-----------|---------------|-------------|
-| `UNIVERSE_SIZE_X` | 100,000 | Universe width |
-| `UNIVERSE_SIZE_Y` | 100,000 | Universe height |
-| `UNIVERSE_SIZE_Z` | 100,000 | Universe depth |
-| `CIVILIZATION_COUNT` | 1,000 | Initial civilizations |
-| `INITIAL_RESOURCES` | 1,000,000,000,000 | Total starting resources |
-| `TIME_STEPS` | 10,000 | Maximum simulation steps |
-| `TECH_EXPOSED_PROB` | 0.01 | Base tech exposure probability |
-| `BASE_GROWTH_RATE` | 0.02 | Population growth rate |
-| `STRIKE_THRESHOLD` | 0.6 | Attack success threshold |
-| `RESOURCE_CONSUMPTION_RATE` | 0.0001 | Resource consumption per population |
+• Java 17 or higher
 
-## Simulation Output
+Installation & Running
 
-Example log output:
+## Clone the repository
+```bash
+git clone https://github.com/<your-username>/ThreeBody-Simulation.git
+cd ThreeBody-Simulation
 ```
-===== SIMULATION START =====
+
+## Compile and run
+```bash
+javac -d bin src/main/java/com/rainy/ThreeBody/*.java src/main/java/com/rainy/tool/Point.java
+java -cp bin com.rainy.ThreeBody.Test
+```
+
+## 📜 Simulation Output Example
+```
+
+---SIMULATION CONFIG---
 Config:
-Universe Size: 100000 x 100000 x 100000
-Civilizations: 1000
-Initial Resources: 1,000,000,000,000
-Time Steps: 10000
-===== SIMULATION BEGIN =====
+--Universe Size: 1000000 x 1000000 x 1000000
+--Civilizations: 1000
+--Initial Resources: 1,000,000,000,000
+--Time Steps: 10000
+---SIMULATION START---
 
 [Step 1] Alive: 1000, Exposed: 0
 Exposed: Civi#42 [Lvl:1500, Pop:120,000, Res:500,000]
 [Step 2] Alive: 1000, Exposed: 1
-Attack: Civi#123 -> Civi#42
-Destroyed: Civi#42
-Resource depleted: Civi#789
+Delayed attack: Civi#123 -> Civi#42 (launched at step 1)
+[Step 3] Alive: 999, Exposed: 1
 ...
 [Step 542] Alive: 1, Exposed: 1
 
-===== WINNER =====
+---WINNER---
 Civi#257 [Tech:14250, Pop:3,250,000, Res:82,500,000] [Exposed] @ (42345, 67890, 12345)
 
-=== SIMULATION RESULTS ===
+---SIMULATION RESULTS---
 Surviving civilizations: 1
 Civi#257 [Lvl:14250, Pop:3,250,000, Res:82,500,000] Exposed
 ```
 
-## Key Algorithms
+## 🤝 Contributing
 
-### Civilization Development
-```java
-void performDevelopment() {
-    // Tech explosion chance (logarithmic with level)
-    double exposureProb = TECH_EXPOSED_PROB * Math.log1p(level);
-    if (RandomService.nextDouble() < exposureProb) {
-        level += 1000 + RandomService.nextInt(5000);
-        resources -= population * 0.1;
-    }
-    
-    // Regular development
-    level += 50 + RandomService.nextInt(100);
-    
-    // Population growth with carrying capacity
-    double carryingCapacity = resources / (population + 1) * 1000;
-    double growthRate = BASE_GROWTH_RATE * 
-                      (1 - population / (carryingCapacity + 1));
-    population += (int)(population * growthRate);
-    
-    // Resource consumption
-    long consumption = (long)(population * RESOURCE_CONSUMPTION_RATE);
-    resources -= consumption;
-}
-```
+### Contributions welcome! Suggested improvements:
 
-### Attack Calculation
-```java
-public boolean attack(Civilization target) {
-    // Tech advantage calculation (normalized)
-    double techAdvantage = (this.level - target.level) / 
-                          (double) (this.level + target.level + 1);
-    
-    // Distance attenuation factor
-    double distance = this.location.distance(target.location);
-    double distanceFactor = 1 / (1 + distance * 0.0001);
-    
-    // Success probability calculation
-    double successProbability = Math.max(0, techAdvantage * 2) * distanceFactor;
-    
-    return RandomService.nextDouble() < successProbability;
-}
-```
+1. **GUI Visualization**: Real-time visualization of civilization distribution
+2. **Sealed State Implementation**: Integrate SealedState into game logic
+3. **Counter-Attack System**: Implement COUNTER_ATTACK_PROB mechanics
+4. **Position Prediction**: Add trajectory prediction for moving targets
+5. **Resource-Based Attacks**: Implement ATTACK_RESOURCE_COST consumption
 
-### Spatial Indexing
-```java
-public List<Civilization> getNearbyCivilizations(Point center, double range) {
-    List<Civilization> result = new ArrayList<>();
-    long squaredRange = (long)(range * range);
-    
-    // Calculate grid range for optimization
-    int gridRange = (int) Math.ceil(range / GRID_SIZE);
-    int centerX = (int) (center.getX() / GRID_SIZE);
-    // ... calculate centerY and centerZ ...
-    
-    // Search neighboring grid cells (3D)
-    for (int x = centerX - gridRange; x <= centerX + gridRange; x++) {
-        for (int y = centerY - gridRange; y <= centerY + gridRange; y++) {
-            for (int z = centerZ - gridRange; z <= centerZ + gridRange; z++) {
-                String key = x + ":" + y + ":" + z;
-                List<Civilization> cell = grid.get(key);
-                if (cell != null) {
-                    for (Civilization civ : cell) {
-                        // Use squared distance for performance
-                        if (civ.getLocation().squaredDistance(center) <= squaredRange) {
-                            result.add(civ);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return result;
-}
-```
 
-## Contributing
 
-Contributions are welcome! Please open issues or pull requests for:
+**Inspired by Liu Cixin's Remembrance of Earth's Past trilogy**
 
-- Performance optimizations
-- Additional simulation parameters
-- Visualization modules
-- Statistical analysis tools
-- Alternative interaction models
-
-### Suggested Improvements(In future,if I have enough time :O )
-1. **GUI Visualization**: Implement real-time visualization of civilization distribution
-2. **External Configuration**: Add parameter configuration via YAML/JSON files
-3. **Parallel Processing**: Develop multi-threaded simulation engine
-4. **Statistical Package**: Create analysis tools for simulation results
-5. **Advanced AI**: Implement machine learning for civilization decision-making
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-**Inspired by Liu Cixin's Remembrance of Earth's Past trilogy**  
-*"In the cosmos, all civilizations are hunters in a dark forest. Like hunters in the dark forest, civilizations must remain hidden and strike first to survive..."*
+*"In the dark forest of the cosmos, every civilization is a hunter... moving silently through the void, striking across light-years, hiding when exposed." - Adapted from Liu Cixin*
