@@ -4,11 +4,12 @@ import com.rainy.tool.Point;
 /**
  * An abstract of universes' civilizations.
  * @author Rainy
- * @date 2025/7/12 -> 3.0
+ * @date 2025/7/13 -> 2.0
  * @version 3.0
  * @history
- * 2025/7/8 -> 1.0
- * 2025/7/9 -> 2.0
+ * 2025/7/8 -> 1.1
+ * 2025/7/9 -> 1.2
+ * 2025/7/12 -> 1.3
  * */
 public class Civilization {
 	
@@ -19,6 +20,8 @@ public class Civilization {
     private int population = 100000;
     
     private Point location;
+    
+    private Point oldLocation;
     
     private int level;
     
@@ -114,9 +117,13 @@ public class Civilization {
     }
     
     public void setLocation(Point location) {
-        Point oldLocation = this.location;
+        oldLocation = this.location;
         this.location = location;
         mediator.onCivilizationMoved(this, oldLocation);
+    }
+    
+    public boolean hasMoved() {
+        return !location.equals(oldLocation);
     }
     
     @Override

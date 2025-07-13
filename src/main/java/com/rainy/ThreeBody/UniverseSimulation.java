@@ -2,11 +2,19 @@ package com.rainy.ThreeBody;
 
 import java.util.List;
 
+import com.rainy.tool.Point;
+
 public class UniverseSimulation {
 	
 	private final UniverseMediator mediator;
     private final ResourceAllocator resourceAllocator;
     private final List<Civilization> civilizations;
+    private final AttackOrder attackOrder;
+    
+    
+    private long alive;
+    private long exposed;
+    
     
     public UniverseSimulation() {
         this.mediator = new UniverseMediator();
@@ -16,41 +24,41 @@ public class UniverseSimulation {
         
         mediator.updateCivilizationList(civilizations);
         
+        this.attackOrder = new AttackOrder(mediator.getCivilizationMap());
+        
         this.resourceAllocator = new ResourceAllocator();
     }
     
     public void start() {
     	
     	LogService.logStart();
-        for (int step = 1; step <= SimulationConfig.TIME_STEPS; step++) {
-            // Stage 1: Random exposure
+        for (int step = 1; step <= SimulationConfig.TIME_STEPS ; step++) {
+        	
+            // Stage 0: Random exposure
             mediator.exposeRandomCivilizations();
+            
+            // Stage 1: Civilization randomly move
+            moveCivilizations(step);
             
             // Stage 2: Resource allocation and development
             resourceAllocator.allocateResources(civilizations);
-            
-            for (Civilization civ : civilizations) {
-                if (!civ.isDestroyed()) {
-                    civ.develop();
-                    
-                    // Check resource depletion
-                    if (civ.getResources() < 0) {
-                        civ.destroy();
-                        LogService.logEvent("Civilization resource depleted", civ);
-                    }
-                }
-            }
+            civilizationsDevelop();
             
             // Stage 3: Attack exposed civilizations
-            mediator.processAttacks();
+            mediator.processAttacks(step, attackOrder);
             
             // Update exposure probability
             mediator.updateExposureProbability();
             
             // Log progress
-            long alive = mediator.countAliveCivilizations();
-            long exposed = mediator.countExposedCivilizations();
+            alive = mediator.countAliveCivilizations();
+            exposed = mediator.countExposedCivilizations();
             LogService.logStep(step, alive, exposed);
+            
+            // It's old implements.
+            // If still has attack orders,start a new step
+            // if (!mediator.isAttackDone())
+            	//continue;
             
             // Termination conditions
             if (alive == 0) {
@@ -70,6 +78,48 @@ public class UniverseSimulation {
         LogService.logResults(mediator.getAliveCivilizations());
     }
 	
+    private void civilizationsDevelop() {
+    	civilizations.parallelStream().forEach(civ -> {
+            if (!civ.isDestroyed()) {
+                civ.develop();
+                if (civ.getResources() < 0) {
+                    civ.destroy();
+                    LogService.logEvent("Civilization resource depleted", civ);
+                }
+            }
+        });
+    }
+    
+    
+    
+    private void moveCivilizations(int step) {
+        for (Civilization civ : civilizations) {
+            if (!civ.isDestroyed() && RandomService.nextDouble() < SimulationConfig.MOVE_PROBABILITY) {
+                var current = civ.getLocation();
+                int dx = RandomService.nextInt(SimulationConfig.MAX_MOVE_DISTANCE * 2) - 
+                         SimulationConfig.MAX_MOVE_DISTANCE;
+                int dy = RandomService.nextInt(SimulationConfig.MAX_MOVE_DISTANCE * 2) - 
+                         SimulationConfig.MAX_MOVE_DISTANCE;
+                int dz = RandomService.nextInt(SimulationConfig.MAX_MOVE_DISTANCE * 2) - 
+                         SimulationConfig.MAX_MOVE_DISTANCE;
+                
+                // var newLocation = Point.valueOf(
+                 int newX = clamp(current.getX() + dx, 0, SimulationConfig.UNIVERSE_SIZE_X);
+                 int newY = clamp(current.getY() + dy, 0, SimulationConfig.UNIVERSE_SIZE_Y);
+                 int newZ = clamp(current.getZ() + dz, 0, SimulationConfig.UNIVERSE_SIZE_Z);
+                //);
+                
+                civ.setLocation(Point.valueOf(newX, newY, newZ));
+                //LogService.logEvent("Civilization moved", civ);
+            }
+        }
+    }
+    
+    private int clamp(int value, int min, int max) {
+        return Math.min(Math.max(value, min), max);
+    }
+    
+    
 	
 	
 	
@@ -227,4 +277,15 @@ public class UniverseSimulation {
 	}
 	
 	*/
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }

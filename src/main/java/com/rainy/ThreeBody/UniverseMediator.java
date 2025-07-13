@@ -9,6 +9,10 @@ public class UniverseMediator {
     private SpatialIndex spatialIndex;
     private double dynamicExposureProb = SimulationConfig.EXPOSED_PROBABILITY;
     
+    private final Map<Integer, Civilization> civilizationMap = new HashMap<>();
+    private final PriorityQueue<AttackCommand> attackCommands = 
+    	    new PriorityQueue<>(Comparator.comparingInt(AttackCommand::getArrivalStep));
+    
     public UniverseMediator() {
         this.spatialIndex = new SpatialIndex();
         this.civilizations = new ArrayList<>();
@@ -16,6 +20,10 @@ public class UniverseMediator {
     
     public void updateCivilizationList(List<Civilization> civilizations) {
         this.civilizations = civilizations;
+        civilizationMap.clear();
+        civilizations.forEach(civ -> civilizationMap.put(civ.getId(), civ));
+        
+        
         spatialIndex = new SpatialIndex();
         
         for (Civilization civ : civilizations) {
@@ -58,25 +66,36 @@ public class UniverseMediator {
                               (1 + 5 * (1 - alive / (double) SimulationConfig.CIVILIZATION_COUNT));
     }
     
-    public void processAttacks() {
-        Set<Civilization> toDestroy = new HashSet<>();
+    public void processAttacks(int currentStep, AttackOrder attackOrder) {
+    	
+    	while (!attackCommands.isEmpty() && attackCommands.peek().getArrivalStep() <= currentStep) {
+    	    AttackCommand cmd = attackCommands.poll();
+    	    attackOrder.resolve(cmd, currentStep);
+    	}
         
-        for (Civilization target : civilizations) {
+        for (Civilization target : getAliveCivilizations()) {
             if (target.isDestroyed() || !target.isExposed()) continue;
             
             List<Civilization> potentialHunters = findPotentialTargets(target);
             for (Civilization hunter : potentialHunters) {
                 if (hunter.isDestroyed() || hunter == target) continue;
                 
-                if (hunter.attack(target)) {
-                    toDestroy.add(target);
-                    LogService.logInfo(String.format("Attack: Civi#%d -> Civi#%d", 
-                            target.getId(), hunter.getId()));
-                }
+                int travelTime = (int) (hunter.distance(target) / SimulationConfig.LIGHT_SPEED);
+                AttackCommand cmd = new AttackCommand(
+                    hunter.getId(),
+                    target.getId(),
+                    currentStep,
+                    target.getLocation(),
+                    travelTime,
+                    hunter.getLevel(),
+                    hunter.getLocation().squareDistance(target.getLocation())
+                );
+                
+                attackCommands.add(cmd);
+                //LogService.logInfo(String.format("Attack launched: Civi#%d -> Civi#%d (ETA step %d)", 
+                  //      hunter.getId(), target.getId(), currentStep + travelTime));
             }
         }
-        
-        toDestroy.forEach(Civilization::destroy);
     }
     
     public long countAliveCivilizations() {
@@ -90,9 +109,9 @@ public class UniverseMediator {
     public List<Civilization> getAliveCivilizations() {
         return civilizations.stream().filter(c -> !c.isDestroyed()).toList();
     }
-    /*
-	public void updateCivilizationList(List<Civilization> civilizations) {
-		this.civilizations.addAll(civilizations);
-	}
-	*/
+    
+    public Map<Integer, Civilization> getCivilizationMap() {
+        return Collections.unmodifiableMap(civilizationMap);
+    }
+    
 }

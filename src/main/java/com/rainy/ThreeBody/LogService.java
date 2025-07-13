@@ -48,6 +48,7 @@ public class LogService {
         logInfo(String.format("--Time Steps: %d", SimulationConfig.TIME_STEPS));
         
         logInfo("Tech Params:");
+        logInfo(String.format("--Light Speed: %d", SimulationConfig.LIGHT_SPEED));
         logInfo(String.format("--Base Growth Rate: %.4f", SimulationConfig.BASE_GROWTH_RATE));
         logInfo(String.format("--Resource Consumption Rate: %.6f", SimulationConfig.RESOURCE_CONSUMPTION_RATE));
         logInfo(String.format("--Exposure Probability: %.4f", SimulationConfig.EXPOSED_PROBABILITY));
